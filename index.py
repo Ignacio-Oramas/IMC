@@ -2,11 +2,14 @@ from flask import Flask, render_template, request,make_response,redirect,session
 from flask_wtf import FlaskForm
 from wtforms import StringField,PasswordField,SubmitField,FloatField
 from wtforms.validators import DataRequired, NumberRange
+import webview
+from graficar_datos import json_grafica # type: ignore
 
 
 app= Flask(__name__)
 app.config["SECRET_KEY"]="mysecretkey"
 
+#* Clase formulario que se usa en el inicio
 class IMCForm(FlaskForm):
     altura = FloatField('Altura (metros)', validators=[
         DataRequired(), 
@@ -18,21 +21,14 @@ class IMCForm(FlaskForm):
     ])
     submit = SubmitField('Calcular IMC')
 
-
-@app.route('/grafica')
-def grafica():
-    if 'imcs' not in session:
-        return redirect('/')
-        
-    from graficar_datos import get_graph_json
-    graphJSON = get_graph_json()
-    
-    # Crear el historial de mediciones para mostrar
-    historial = zip(session['alturas'], session['pesos'], session['imcs'])
-    return render_template("grafica.html", graphJSON=graphJSON, historial=historial)
-
-@app.route('/', methods=['GET', 'POST'])
+#*Pagina de inicio
+@app.route('/')
 def Inicio():
+    return render_template('inicio.html')
+
+#*Caculadora
+@app.route('/calculadoraimc', methods=['GET', 'POST'])
+def CalculadoraIMC():
     form = IMCForm()
     if form.validate_on_submit():
         altura = form.altura.data
@@ -57,9 +53,18 @@ def Inicio():
     historial = None
     if 'imcs' in session:
         historial = zip(session['alturas'], session['pesos'], session['imcs'])
-    return render_template('inicio.html', form=form, historial=historial)
+    return render_template('calculadoraIMC.html', form=form, historial=historial)
 
+#* GRAFICA
+@app.route('/grafica')
+def grafica():
+    if 'imcs' not in session:
+        return redirect('/')
+    graphJSON = json_grafica()
+    historial = zip(session['alturas'], session['pesos'], session['imcs'])
+    return render_template("grafica.html", graphJSON=graphJSON, historial=historial)
 
+#* reset valores de la sesion
 @app.route('/reset')
 def reset_mediciones():
     session.pop('alturas', None)
@@ -86,5 +91,35 @@ def cerrar_sesion():
 
 
 
+
+
+
+
+
+
+def Ventana(entrada):
+    if (entrada==True):
+        webview.create_window(
+                "Mi Aplicación Flask",  # Título de la ventana
+                "http://127.0.0.1:5000",  # URL de Flask
+                width=800,  # Ancho de la ventana
+                height=600,  # Alto de la ventana
+            )
+        webview.start()  # Iniciar la ventana
+
 if __name__ == '__main__':
     app.run(debug=True)
+    Ventana(False)
+
+
+
+
+
+
+
+
+
+
+
+
+

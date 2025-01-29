@@ -4,7 +4,7 @@ import plotly.utils
 from flask import session
 meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
 
-def get_graph_json():
+def json_grafica():
     fig = go.Figure()
     
     # Obtener los datos de IMC de la sesión

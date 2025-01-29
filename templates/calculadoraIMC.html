@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    
+<head>
+    <title>Calculadora de IMC</title>
+</head>
+<body>
+    <h1>Calculadora de IMC</h1>
+    <form method="POST">
+        {{ form.csrf_token }}
+        <div>
+            {{ form.altura.label }}<br>
+            {{ form.altura(value=session['alturas'][0] if session.get('alturas') else '') }}
+                {% if form.altura.errors %}
+                {% for error in form.altura.errors %}
+                    <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div>
+            {{ form.peso.label }}<br>
+            {{ form.peso }}
+            {% if form.peso.errors %}
+                {% for error in form.peso.errors %}
+                    <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+        </div>
+        {{ form.submit }}
+    </form>
+    {% if historial %}
+    <div class="historial">
+        <h3>Historial de Mediciones</h3>
+        <table>
+            <tr>
+                <th>Altura (m)</th>
+                <th>Peso (kg)</th>
+                <th>IMC</th>
+            </tr>
+            {% for altura, peso, imc in historial %}
+            <tr>
+                <td>{{ "%.2f"|format(altura) }}</td>
+                <td>{{ "%.2f"|format(peso) }}</td>
+                <td>{{ "%.2f"|format(imc) }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <a href="{{ url_for('reset_mediciones') }}">Reiniciar mediciones</a>
+        <br><br>
+        <a href="{{ url_for('grafica') }}" class="boton-grafica">Volver a la gráfica</a>
+    </div>
+    {% endif %}
+</body>
+</html>
