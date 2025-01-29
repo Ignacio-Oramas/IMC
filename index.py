@@ -1,13 +1,18 @@
-from flask import Flask, render_template, request,make_response,redirect,session
+# index.py
+from flask import Flask, render_template, request, make_response, redirect, session, flash, g
 from flask_wtf import FlaskForm
-from wtforms import StringField,PasswordField,SubmitField,FloatField
+from wtforms import StringField, PasswordField, SubmitField, FloatField
 from wtforms.validators import DataRequired, NumberRange
 import webview
 from graficar_datos import json_grafica # type: ignore
+from database import get_db, init_db  # Importa init_db
+import sqlite3
 
+app = Flask(__name__)
+app.config["SECRET_KEY"] = "mysecretkey"
 
-app= Flask(__name__)
-app.config["SECRET_KEY"]="mysecretkey"
+# Inicializar la base de datos al iniciar la aplicación
+init_db()
 
 #* Clase formulario que se usa en el inicio
 class IMCForm(FlaskForm):
@@ -72,30 +77,42 @@ def reset_mediciones():
     session.pop('imcs', None)
     return redirect('/')
 
-@app.route('/cerrar-sesion') # TODO: eliminar si no se usa cuando le pongamos la BD
+@app.route('/cerrar-sesion')
 def cerrar_sesion():
     session.clear()  
-    return redirect(('/'))
+    return redirect('/')
 
+#* Login
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        db = get_db()
+        user = db.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
+        if user and user['password'] == password:
+            session['user_id'] = user['id']
+            flash('Login successful!', 'success')
+            return redirect('/')
+        else:
+            flash('Invalid username or password', 'error')
+    return render_template('login.html')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#* Signup
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        db = get_db()
+        try:
+            db.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, password))
+            db.commit()
+            flash('Signup successful! Please login.', 'success')
+            return redirect('/login')
+        except sqlite3.IntegrityError:
+            flash('Username already exists', 'error')
+    return render_template('signup.html')
 
 def Ventana(entrada):
     if (entrada==True):
@@ -110,16 +127,3 @@ def Ventana(entrada):
 if __name__ == '__main__':
     app.run(debug=True)
     Ventana(False)
-
-
-
-
-
-
-
-
-
-
-
-
-
