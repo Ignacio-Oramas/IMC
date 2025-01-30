@@ -32,39 +32,23 @@ def actualizar_altura(usuario_id, nueva_altura):
     conn.close()
 
 # Funciones para Pesos
-def registrar_peso(usuario_id, mes, peso):
+def registrar_peso(usuario_id, mes, anio, peso):
     conn = get_db()
-    # Verificar si ya existe un registro para el mes
-    existente = conn.execute(
-        'SELECT * FROM Pesos WHERE usuario_id = ? AND mes = ?', 
-        (usuario_id, mes)
-    ).fetchone()
-    
-    if existente:
-        # Si existe, actualizar el peso
-        conn.execute(
-            'UPDATE Pesos SET peso = ? WHERE id = ?', 
-            (peso, existente['id'])
-        )
-    else:
-        # Si no existe, crear un nuevo registro
-        conn.execute(
-            'INSERT INTO Pesos (usuario_id, mes, peso) VALUES (?, ?, ?)', 
-            (usuario_id, mes, peso)
-        )
+    conn.execute(
+        'INSERT INTO Pesos (usuario_id, mes, anio, peso) VALUES (?, ?, ?, ?)',
+        (usuario_id, mes, anio, peso)
+    )
     conn.commit()
     conn.close()
 
 def obtener_historial_pesos(usuario_id):
     conn = get_db()
-    pesos = conn.execute('''
-        SELECT mes, peso, strftime('%Y-%m-%d', fecha_registro) as fecha 
-        FROM Pesos 
-        WHERE usuario_id = ?
-        ORDER BY fecha_registro DESC
-    ''', (usuario_id,)).fetchall()
+    historial = conn.execute(
+        'SELECT mes, anio, peso FROM Pesos WHERE usuario_id = ? ORDER BY anio, mes',
+        (usuario_id,)
+    ).fetchall()
     conn.close()
-    return pesos
+    return historial  # Devuelve una lista de tuplas
 
 # Funciones para Entrenador
 def obtener_usuarios_entrenador(entrenador_id):

@@ -47,17 +47,20 @@
                         Registrar Nuevo Peso
                     </div>
                     <div class="card-body">
-                        <form method="POST" action="/registrar_peso/{{ usuario.dni }}">
+                        <form method="POST" action="{{ url_for('registrar_peso_route', dni=usuario.dni) }}">
                             {{ peso_form.hidden_tag() }}
-                            <div class="form-group">
-                                {{ peso_form.mes.label }}
-                                {{ peso_form.mes(class="form-control") }}
+                            <div>
+                                {{ peso_form.mes.label }} {{ peso_form.mes() }}
                             </div>
-                            <div class="form-group">
-                                {{ peso_form.peso.label }}
-                                {{ peso_form.peso(class="form-control") }}
+                            <div>
+                                {{ peso_form.anio.label }} {{ peso_form.anio() }}
                             </div>
-                            {{ peso_form.submit(class="btn btn-success") }}
+                            <div>
+                                {{ peso_form.peso.label }} {{ peso_form.peso() }}
+                            </div>
+                            <div>
+                                {{ peso_form.submit() }}
+                            </div>
                         </form>
                     </div>
                 </div>

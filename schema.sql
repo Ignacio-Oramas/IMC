@@ -18,9 +18,9 @@ CREATE TABLE IF NOT EXISTS Usuarios (
 
 CREATE TABLE IF NOT EXISTS Pesos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    usuario_id INTEGER,
+    usuario_id INTEGER NOT NULL,
     mes TEXT NOT NULL,
-    peso FLOAT NOT NULL,
-    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (usuario_id) REFERENCES Usuarios (id)
+    anio TEXT NOT NULL,
+    peso REAL NOT NULL,
+    FOREIGN KEY (usuario_id) REFERENCES Usuarios(id)
 );

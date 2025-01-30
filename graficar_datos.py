@@ -8,15 +8,15 @@ meses_orden = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
 def json_grafica(altura, pesos):
     fig = go.Figure()
     
-    # Calcular IMC para cada mes
-    imcs = {mes: (peso / (altura ** 2)) for mes, peso in pesos.items()}
+    # Calcular IMC para cada mes y año
+    imcs = {fecha: (peso / (altura ** 2)) for fecha, peso in pesos.items()}
     
-    # Ordenar los datos por meses
-    meses = [mes for mes in meses_orden if mes in imcs]
-    valores_imc = [imcs[mes] for mes in meses]
+    # Ordenar los datos por fecha
+    fechas = sorted(imcs.keys())
+    valores_imc = [imcs[fecha] for fecha in fechas]
     
     fig.add_trace(go.Scatter(
-        x=meses,
+        x=fechas,
         y=valores_imc,
         mode='lines+markers',
         name='IMC',
@@ -38,7 +38,7 @@ def json_grafica(altura, pesos):
     fig.update_layout(
         template="plotly_dark",
         title="Evolución del IMC",
-        xaxis_title="Meses",
+        xaxis_title="Fecha",
         yaxis_title="IMC",
         hovermode="x unified"
     )

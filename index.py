@@ -4,6 +4,7 @@ from wtforms import StringField, FloatField, SelectField, SubmitField, PasswordF
 from wtforms.validators import DataRequired, NumberRange
 from database import *
 from graficar_datos import json_grafica
+from datetime import datetime  # Importa datetime para obtener el año actual
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mysecretkey'
@@ -37,11 +38,21 @@ class RegistrarPesoForm(FlaskForm):
         ('Julio', 'Julio'), ('Agosto', 'Agosto'), ('Septiembre', 'Septiembre'),
         ('Octubre', 'Octubre'), ('Noviembre', 'Noviembre'), ('Diciembre', 'Diciembre')
     ], validators=[DataRequired()])
+    
+    # Generar opciones de años dinámicamente
+    anio = SelectField('Año', choices=[], validators=[DataRequired()])
+    
     peso = FloatField('Peso (kg)', validators=[
         DataRequired(), 
         NumberRange(min=20, max=300, message="Peso debe estar entre 20 y 300 kg")
     ])
     submit = SubmitField('Registrar Peso')
+
+    def __init__(self, *args, **kwargs):
+        super(RegistrarPesoForm, self).__init__(*args, **kwargs)
+        # Generar una lista de años desde 2000 hasta el año actual + 5
+        año_actual = datetime.now().year
+        self.anio.choices = [(str(año), str(año)) for año in range(2000, año_actual + 6)]
 
 @app.route('/editar_usuario/<int:usuario_id>', methods=['GET', 'POST'])
 def editar_usuario_route(usuario_id):
@@ -178,6 +189,7 @@ def registrar_peso_route(dni):
         registrar_peso(
             usuario_id=usuario['id'],  # ID del usuario
             mes=form.mes.data,         # Mes seleccionado
+            anio=form.anio.data,       # Año seleccionado
             peso=form.peso.data        # Peso registrado
         )
         flash('Peso registrado correctamente', 'success')
@@ -194,10 +206,9 @@ def grafica_usuario(dni):
     historial = obtener_historial_pesos(usuario['id'])
     
     # Preparar datos para la gráfica
-    pesos = {registro['mes']: registro['peso'] for registro in historial}
+    pesos = {f"{anio}-{mes}": peso for mes, anio, peso in historial}  # Usar mes y año como clave
     graphJSON = json_grafica(usuario['altura'], pesos)
     
-    # Pasar el DNI del usuario a la plantilla
     return render_template('grafica.html', graphJSON=graphJSON, dni=usuario['dni'])
 
 # Nuevos Forms
