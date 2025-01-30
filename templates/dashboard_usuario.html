@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard Usuario</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>{{ usuario.nombre }} {{ usuario.apellido }}</h1>
+        
+        <div class="row">
+            <!-- Columna Izquierda: Datos Personales -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        Datos Personales
+                    </div>
+                    <div class="card-body">
+                        <p><strong>DNI:</strong> {{ usuario.dni }}</p>
+                        <p><strong>Altura:</strong> {{ usuario.altura }} m</p>
+                        <p><strong>Peso Inicial:</strong> {{ usuario.peso_inicial }} kg</p>
+                        <p><strong>Peso Ideal:</strong> {{ usuario.peso_ideal }} kg</p>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header">
+                        Actualizar Altura
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="/actualizar_altura/{{ usuario.dni }}">
+                            {{ altura_form.hidden_tag() }}
+                            <div class="form-group">
+                                {{ altura_form.nueva_altura.label }}
+                                {{ altura_form.nueva_altura(class="form-control") }}
+                            </div>
+                            {{ altura_form.submit(class="btn btn-warning") }}
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Progreso -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        Registrar Nuevo Peso
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="/registrar_peso/{{ usuario.dni }}">
+                            {{ peso_form.hidden_tag() }}
+                            <div class="form-group">
+                                {{ peso_form.mes.label }}
+                                {{ peso_form.mes(class="form-control") }}
+                            </div>
+                            <div class="form-group">
+                                {{ peso_form.peso.label }}
+                                {{ peso_form.peso(class="form-control") }}
+                            </div>
+                            {{ peso_form.submit(class="btn btn-success") }}
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        Historial de Pesos
+                    </div>
+                    <div class="card-body">
+                        <a href="/grafica_usuario/{{ usuario.dni }}" class="btn btn-info mb-3">Ver Gráfico</a>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Mes</th>
+                                    <th>Peso</th>
+                                    <th>Fecha Registro</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for registro in historial %}
+                                <tr>
+                                    <td>{{ registro.mes }}</td>
+                                    <td>{{ registro.peso }} kg</td>
+                                    <td>{{ registro.fecha }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

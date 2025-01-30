@@ -1,129 +1,293 @@
-# index.py
-from flask import Flask, render_template, request, make_response, redirect, session, flash, g
+from flask import Flask, render_template, request, flash, redirect, session
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, FloatField
+from wtforms import StringField, FloatField, SelectField, SubmitField, PasswordField
 from wtforms.validators import DataRequired, NumberRange
-import webview
-from graficar_datos import json_grafica # type: ignore
-from database import get_db, init_db  # Importa init_db
-import sqlite3
+from database import *
+from graficar_datos import json_grafica
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "mysecretkey"
+app.config['SECRET_KEY'] = 'mysecretkey'
 
-# Inicializar la base de datos al iniciar la aplicación
-init_db()
+# Forms
+class LoginForm(FlaskForm):
+    username = StringField('Usuario', validators=[DataRequired()])
+    password = PasswordField('Contraseña', validators=[DataRequired()])
+    submit = SubmitField('Iniciar Sesión')
 
-#* Clase formulario que se usa en el inicio
-class IMCForm(FlaskForm):
-    altura = FloatField('Altura (metros)', validators=[
+class SignupForm(FlaskForm):
+    username = StringField('Usuario', validators=[DataRequired()])
+    password = PasswordField('Contraseña', validators=[DataRequired()])
+    submit = SubmitField('Registrarse')
+
+class AccesoUsuarioForm(FlaskForm):
+    dni = StringField('DNI del Usuario', validators=[DataRequired()])
+    submit = SubmitField('Acceder')
+
+class EditarAlturaForm(FlaskForm):
+    nueva_altura = FloatField('Nueva Altura (m)', validators=[
         DataRequired(), 
         NumberRange(min=0.5, max=2.5, message="Altura debe estar entre 0.5 y 2.5 metros")
     ])
+    submit = SubmitField('Actualizar Altura')
+
+class RegistrarPesoForm(FlaskForm):
+    mes = SelectField('Mes', choices=[
+        ('Enero', 'Enero'), ('Febrero', 'Febrero'), ('Marzo', 'Marzo'),
+        ('Abril', 'Abril'), ('Mayo', 'Mayo'), ('Junio', 'Junio'),
+        ('Julio', 'Julio'), ('Agosto', 'Agosto'), ('Septiembre', 'Septiembre'),
+        ('Octubre', 'Octubre'), ('Noviembre', 'Noviembre'), ('Diciembre', 'Diciembre')
+    ], validators=[DataRequired()])
     peso = FloatField('Peso (kg)', validators=[
-        DataRequired(),
+        DataRequired(), 
         NumberRange(min=20, max=300, message="Peso debe estar entre 20 y 300 kg")
     ])
-    submit = SubmitField('Calcular IMC')
+    submit = SubmitField('Registrar Peso')
 
-#*Pagina de inicio
-@app.route('/')
-def Inicio():
-    return render_template('inicio.html')
-
-#*Caculadora
-@app.route('/calculadoraimc', methods=['GET', 'POST'])
-def CalculadoraIMC():
-    form = IMCForm()
+@app.route('/editar_usuario/<int:usuario_id>', methods=['GET', 'POST'])
+def editar_usuario_route(usuario_id):
+    if 'user_id' not in session:
+        return redirect('/login')
+    
+    # Obtener el usuario por su ID
+    usuario = obtener_usuario_por_id(usuario_id)
+    if not usuario:
+        flash('Usuario no encontrado', 'error')
+        return redirect('/dashboard_entrenador')
+    
+    form = EditarUsuarioForm(obj=usuario)
     if form.validate_on_submit():
-        altura = form.altura.data
-        peso = form.peso.data
-        imc = peso / (altura ** 2)
-        
-        # Inicializar o actualizar las listas en la sesión
-        if 'alturas' not in session:
-            session['alturas'] = []
-            session['pesos'] = []
-            session['imcs'] = []
-        
-        # Agregar nuevas mediciones
-        session['alturas'] = session['alturas'] + [altura]
-        session['pesos'] = session['pesos'] + [peso]
-        session['imcs'] = session['imcs'] + [imc]
-        
-        # Guardar los cambios en la sesión
-        session.modified = True
-        
-        return redirect('/grafica')
-    historial = None
-    if 'imcs' in session:
-        historial = zip(session['alturas'], session['pesos'], session['imcs'])
-    return render_template('calculadoraIMC.html', form=form, historial=historial)
+        actualizar_usuario(
+            usuario_id=usuario_id,
+            nombre=form.nombre.data,
+            apellido=form.apellido.data,
+            altura=form.altura.data,
+            peso_inicial=form.peso_inicial.data,
+            peso_ideal=form.peso_ideal.data
+        )
+        flash('Usuario actualizado correctamente', 'success')
+        return redirect('/dashboard_entrenador')
+    
+    return render_template('editar_usuario.html', form=form, usuario=usuario)
 
-#* GRAFICA
-@app.route('/grafica')
-def grafica():
-    if 'imcs' not in session:
-        return redirect('/')
-    graphJSON = json_grafica()
-    historial = zip(session['alturas'], session['pesos'], session['imcs'])
-    return render_template("grafica.html", graphJSON=graphJSON, historial=historial)
-
-#* reset valores de la sesion
-@app.route('/reset')
-def reset_mediciones():
-    session.pop('alturas', None)
-    session.pop('pesos', None)
-    session.pop('imcs', None)
-    return redirect('/')
-
-@app.route('/cerrar-sesion')
-def cerrar_sesion():
-    session.clear()  
-    return redirect('/')
-
-#* Login
+# Rutas de Autenticación
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+    form = LoginForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
         db = get_db()
-        user = db.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
+        user = db.execute('SELECT * FROM Entrenador WHERE username = ?', (username,)).fetchone()
         if user and user['password'] == password:
             session['user_id'] = user['id']
-            flash('Login successful!', 'success')
-            return redirect('/')
-        else:
-            flash('Invalid username or password', 'error')
-    return render_template('login.html')
+            session['username'] = user['username']
+            flash('Inicio de sesión exitoso', 'success')
+            return redirect('/dashboard_entrenador')
+        flash('Usuario o contraseña incorrectos', 'error')
+    return render_template('login.html', form=form)
 
-#* Signup
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+    form = SignupForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
         db = get_db()
         try:
-            db.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, password))
+            db.execute('INSERT INTO Entrenador (username, password) VALUES (?, ?)', (username, password))
             db.commit()
-            flash('Signup successful! Please login.', 'success')
+            flash('Registro exitoso. Por favor, inicia sesión.', 'success')
             return redirect('/login')
         except sqlite3.IntegrityError:
-            flash('Username already exists', 'error')
-    return render_template('signup.html')
+            flash('El nombre de usuario ya existe', 'error')
+    return render_template('signup.html', form=form)
 
-def Ventana(entrada):
-    if (entrada==True):
-        webview.create_window(
-                "Mi Aplicación Flask",  # Título de la ventana
-                "http://127.0.0.1:5000",  # URL de Flask
-                width=800,  # Ancho de la ventana
-                height=600,  # Alto de la ventana
-            )
-        webview.start()  # Iniciar la ventana
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('Sesión cerrada correctamente', 'success')
+    return redirect('/login')
+
+# Rutas Entrenador
+@app.route('/dashboard_entrenador', methods=['GET', 'POST'])
+def dashboard_entrenador():
+    if 'user_id' not in session:
+        return redirect('/login')
+    
+    form = AccesoUsuarioForm()
+    usuarios = obtener_usuarios_entrenador(session['user_id'])
+    
+    if form.validate_on_submit():
+        usuario = obtener_usuario_por_dni(form.dni.data)
+        if usuario:
+            return redirect(f'/dashboard_usuario/{usuario["dni"]}')
+        flash('Usuario no encontrado', 'error')
+    
+    return render_template('dashboard_entrenador.html', form=form, usuarios=usuarios)
+
+# Rutas Usuario
+@app.route('/dashboard_usuario/<dni>')
+def dashboard_usuario(dni):
+    usuario = obtener_usuario_por_dni(dni)
+    if not usuario:
+        flash('Usuario no encontrado', 'error')
+        return redirect('/dashboard_entrenador')
+    
+    altura_form = EditarAlturaForm()
+    peso_form = RegistrarPesoForm()
+    historial = obtener_historial_pesos(usuario['id'])
+    
+    return render_template('dashboard_usuario.html',
+                         usuario=usuario,
+                         altura_form=altura_form,
+                         peso_form=peso_form,
+                         historial=historial)
+
+@app.route('/actualizar_altura/<dni>', methods=['POST'])
+def actualizar_altura_route(dni):
+    if 'user_id' not in session:
+        return redirect('/login')
+    
+    usuario = obtener_usuario_por_dni(dni)
+    if not usuario:
+        flash('Usuario no encontrado', 'error')
+        return redirect('/dashboard_entrenador')
+    
+    form = EditarAlturaForm()
+    if form.validate_on_submit():
+        actualizar_altura(
+            usuario_id=usuario['id'],      # ID del usuario
+            nueva_altura=form.nueva_altura.data  # Nueva altura
+        )
+        flash('Altura actualizada correctamente', 'success')
+    
+    return redirect(f'/dashboard_usuario/{dni}')
+
+@app.route('/registrar_peso/<dni>', methods=['POST'])
+def registrar_peso_route(dni):
+    if 'user_id' not in session:
+        return redirect('/login')
+    
+    usuario = obtener_usuario_por_dni(dni)
+    if not usuario:
+        flash('Usuario no encontrado', 'error')
+        return redirect('/dashboard_entrenador')
+    
+    form = RegistrarPesoForm()
+    if form.validate_on_submit():
+        registrar_peso(
+            usuario_id=usuario['id'],  # ID del usuario
+            mes=form.mes.data,         # Mes seleccionado
+            peso=form.peso.data        # Peso registrado
+        )
+        flash('Peso registrado correctamente', 'success')
+    
+    return redirect(f'/dashboard_usuario/{dni}')
+
+@app.route('/grafica_usuario/<dni>')
+def grafica_usuario(dni):
+    usuario = obtener_usuario_por_dni(dni)
+    if not usuario:
+        flash('Usuario no encontrado', 'error')
+        return redirect('/dashboard_entrenador')
+    
+    historial = obtener_historial_pesos(usuario['id'])
+    
+    # Preparar datos para la gráfica
+    pesos = {registro['mes']: registro['peso'] for registro in historial}
+    graphJSON = json_grafica(usuario['altura'], pesos)
+    
+    # Pasar el DNI del usuario a la plantilla
+    return render_template('grafica.html', graphJSON=graphJSON, dni=usuario['dni'])
+
+# Nuevos Forms
+class CrearUsuarioForm(FlaskForm):
+    dni = StringField('DNI', validators=[DataRequired()])
+    nombre = StringField('Nombre', validators=[DataRequired()])
+    apellido = StringField('Apellido', validators=[DataRequired()])
+    altura = FloatField('Altura (m)', validators=[
+        DataRequired(), 
+        NumberRange(min=0.5, max=2.5, message="Altura debe estar entre 0.5 y 2.5 metros")
+    ])
+    peso_inicial = FloatField('Peso Inicial (kg)', validators=[
+        DataRequired(), 
+        NumberRange(min=20, max=300, message="Peso debe estar entre 20 y 300 kg")
+    ])
+    peso_ideal = FloatField('Peso Ideal (kg)', validators=[
+        DataRequired(), 
+        NumberRange(min=20, max=300, message="Peso debe estar entre 20 y 300 kg")
+    ])
+    submit = SubmitField('Crear Usuario')
+
+class EditarUsuarioForm(FlaskForm):
+    nombre = StringField('Nombre', validators=[DataRequired()])
+    apellido = StringField('Apellido', validators=[DataRequired()])
+    altura = FloatField('Altura (m)', validators=[
+        DataRequired(), 
+        NumberRange(min=0.5, max=2.5, message="Altura debe estar entre 0.5 y 2.5 metros")
+    ])
+    peso_inicial = FloatField('Peso Inicial (kg)', validators=[
+        DataRequired(), 
+        NumberRange(min=20, max=300, message="Peso debe estar entre 20 y 300 kg")
+    ])
+    peso_ideal = FloatField('Peso Ideal (kg)', validators=[
+        DataRequired(), 
+        NumberRange(min=20, max=300, message="Peso debe estar entre 20 y 300 kg")
+    ])
+    submit = SubmitField('Actualizar Usuario')
+
+# Nueva función en database.py
+def crear_usuario(dni, nombre, apellido, altura, peso_inicial, peso_ideal, entrenador_id):
+    conn = get_db()
+    conn.execute(
+        'INSERT INTO Usuarios (dni, nombre, apellido, altura, peso_inicial, peso_ideal, entrenador_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        (dni, nombre, apellido, altura, peso_inicial, peso_ideal, entrenador_id)
+    )
+    conn.commit()
+    conn.close()
+
+def eliminar_usuario(usuario_id):
+    conn = get_db()
+    conn.execute('DELETE FROM Usuarios WHERE id = ?', (usuario_id,))
+    conn.commit()
+    conn.close()
+
+# Nuevas rutas en index.py
+@app.route('/crear_usuario', methods=['GET', 'POST'])
+def crear_usuario_route():
+    if 'user_id' not in session:
+        return redirect('/login')
+    
+    form = CrearUsuarioForm()
+    if form.validate_on_submit():
+        crear_usuario(
+            dni=form.dni.data,
+            nombre=form.nombre.data,
+            apellido=form.apellido.data,
+            altura=form.altura.data,
+            peso_inicial=form.peso_inicial.data,
+            peso_ideal=form.peso_ideal.data,
+            entrenador_id=session['user_id']
+        )
+        flash('Usuario creado correctamente', 'success')
+        return redirect('/dashboard_entrenador')
+    
+    return render_template('crear_usuario.html', form=form)
+
+@app.route('/eliminar_usuario/<int:usuario_id>')
+def eliminar_usuario_route(usuario_id):
+    if 'user_id' not in session:
+        return redirect('/login')
+    
+    eliminar_usuario(usuario_id)
+    flash('Usuario eliminado correctamente', 'success')
+    return redirect('/dashboard_entrenador')
+
+# Ruta de Inicio
+@app.route('/')
+def inicio():
+    return redirect('/login')
 
 if __name__ == '__main__':
+    init_db()
     app.run(debug=True)
-    Ventana(False)
