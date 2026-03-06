@@ -1,0 +1,4 @@
+validar registro y cualquier entrada
+modificar ver grafico para establecer un rango
+crear recuperar contraseña
+agregar validacion para cedulas duplicadas

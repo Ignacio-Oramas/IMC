@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil de {{ usuario.nombre }} - Fitness App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-950 text-slate-200 min-h-screen flex flex-col items-center">
+
+    <!-- Top Navigation -->
+    <nav class="w-full bg-slate-900/80 backdrop-blur-xl border-b border-slate-800 fixed top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <a href="/dashboard_entrenador"
+                        class="p-2 -ml-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </a>
+                    <div
+                        class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                        <i class="fa-solid fa-user text-white text-sm"></i>
+                    </div>
+                    <span class="font-bold text-xl text-white tracking-tight">Perfil del Cliente</span>
+                </div>
+                <div>
+                    <a href="/logout"
+                        class="text-sm font-medium text-slate-400 hover:text-white transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar Sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-12 flex-1 relative">
+        <!-- Decorators -->
+        <div
+            class="absolute top-0 right-0 w-[40%] h-[40%] rounded-full bg-teal-600/10 blur-[120px] -z-10 pointer-events-none">
+        </div>
+        <div
+            class="absolute bottom-0 left-[10%] w-[30%] h-[40%] rounded-full bg-indigo-600/10 blur-[100px] -z-10 pointer-events-none">
+        </div>
+
+        <!-- Header -->
+        <div class="mb-10 flex items-center gap-5">
+            <div
+                class="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 flex items-center justify-center shadow-xl">
+                <span class="text-2xl font-bold text-white">{{ usuario.nombre[0].upper() }}{{
+                    usuario.apellido[0].upper() }}</span>
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-white tracking-tight">{{ usuario.nombre }} {{ usuario.apellido }}
+                </h1>
+                <p class="text-slate-400 mt-1 flex items-center gap-2">
+                    <i class="fa-regular fa-id-card text-xs"></i> {{ usuario.dni }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Mensajes Flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="mb-8 space-y-2">
+            {% for category, message in messages %}
+            <div
+                class="p-4 rounded-xl flex items-center gap-3 {{ 'bg-red-500/10 text-red-400 border border-red-500/20' if category == 'error' else 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' }}">
+                <i class="fa-solid {{ 'fa-circle-exclamation' if category == 'error' else 'fa-circle-check' }}"></i>
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column: Personal Data & Height -->
+            <div class="space-y-8">
+                <!-- Datos Personales -->
+                <div
+                    class="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-[50px]"></div>
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="p-2.5 bg-slate-800 rounded-lg text-indigo-400">
+                            <i class="fa-solid fa-clipboard-user"></i>
+                        </div>
+                        <h2 class="text-lg font-semibold text-white">Datos Personales</h2>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center py-2 border-b border-slate-800/50">
+                            <span class="text-slate-400 text-sm">Altura actual</span>
+                            <span class="text-white font-medium">{{ usuario.altura }} m</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-slate-800/50">
+                            <span class="text-slate-400 text-sm">Peso inicial</span>
+                            <span class="text-white font-medium">{{ usuario.peso_inicial }} kg</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-slate-800/50">
+                            <span class="text-slate-400 text-sm">Peso ideal (Objetivo)</span>
+                            <span class="text-emerald-400 font-medium bg-emerald-500/10 px-2 py-1 rounded-md">{{
+                                usuario.peso_ideal }} kg</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actualizar Altura -->
+                <div
+                    class="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden hover:border-amber-500/30 transition-colors group">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="p-2.5 bg-slate-800 rounded-lg text-amber-400">
+                            <i class="fa-solid fa-ruler-vertical"></i>
+                        </div>
+                        <h2 class="text-lg font-semibold text-white">Actualizar Altura</h2>
+                    </div>
+
+                    <form method="POST" action="/actualizar_altura/{{ usuario.dni }}" class="space-y-4">
+                        {{ altura_form.hidden_tag() }}
+                        <div class="space-y-1">
+                            <label class="block text-sm font-medium text-slate-300">Nueva Altura (m)</label>
+                            {{ altura_form.nueva_altura(class="w-full px-4 py-2.5 bg-slate-950 border border-slate-700
+                            rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent
+                            transition-all duration-200 text-slate-200 placeholder-slate-500", step="0.01") }}
+                        </div>
+                        {{ altura_form.submit(class="w-full py-2.5 px-4 font-semibold text-white bg-slate-800 border
+                        border-slate-700 hover:bg-amber-500/20 hover:text-amber-400 hover:border-amber-500/50 rounded-xl
+                        transition-all duration-200 cursor-pointer text-center", value="Actualizar") }}
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column: Progress & History -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Registrar Peso -->
+                <div
+                    class="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden group hover:border-emerald-500/30 transition-colors">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="p-2.5 bg-slate-800 rounded-lg text-emerald-400">
+                            <i class="fa-solid fa-weight-scale"></i>
+                        </div>
+                        <h2 class="text-lg font-semibold text-white">Registrar Nuevo Peso</h2>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('registrar_peso_route', dni=usuario.dni) }}"
+                        class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        {{ peso_form.hidden_tag() }}
+                        <div class="space-y-1 md:col-span-1">
+                            <label class="block text-sm font-medium text-slate-300">Mes</label>
+                            {{ peso_form.mes(class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl
+                            focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent
+                            text-slate-200") }}
+                        </div>
+                        <div class="space-y-1 md:col-span-1">
+                            <label class="block text-sm font-medium text-slate-300">Año</label>
+                            {{ peso_form.anio(class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl
+                            focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent
+                            text-slate-200") }}
+                        </div>
+                        <div class="space-y-1 md:col-span-1">
+                            <label class="block text-sm font-medium text-slate-300">Peso (kg)</label>
+                            {{ peso_form.peso(class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl
+                            focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent
+                            text-slate-200", step="0.1") }}
+                        </div>
+                        <div class="md:col-span-1">
+                            {{ peso_form.submit(class="w-full py-2.5 px-4 font-semibold text-emerald-100
+                            bg-emerald-600/20 border border-emerald-500/50 hover:bg-emerald-500 hover:text-white
+                            rounded-xl transition-all duration-200 cursor-pointer text-center", value="Agregar") }}
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Historial -->
+                <div
+                    class="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-xl overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-slate-800 rounded-lg text-purple-400">
+                                <i class="fa-solid fa-clock-rotate-left"></i>
+                            </div>
+                            <h2 class="text-lg font-semibold text-white">Historial de Pesos</h2>
+                        </div>
+                        <a href="/grafica_usuario/{{ usuario.dni }}"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/10 text-indigo-400 text-sm font-semibold rounded-lg hover:bg-indigo-500 hover:text-white transition-all cursor-pointer border border-indigo-500/20 hover:border-indigo-500">
+                            <i class="fa-solid fa-chart-area"></i>
+                            Ver Gráfico
+                        </a>
+                    </div>
+
+                    <div class="overflow-x-auto p-2">
+                        {% if historial %}
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="text-xs font-medium text-slate-400 uppercase tracking-wider border-b border-slate-800/50">
+                                    <th class="px-5 py-4">Peso</th>
+                                    <th class="px-5 py-4">Periodo</th>
+                                    <th class="px-5 py-4 text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800/50">
+                                {% for registro in historial %}
+                                <tr class="hover:bg-slate-800/30 transition-colors group">
+                                    <td class="px-5 py-4 whitespace-nowrap">
+                                        <span
+                                            class="text-sm font-semibold text-white bg-slate-800 px-3 py-1 rounded-md border border-slate-700">{{
+                                            registro.peso }} kg</span>
+                                    </td>
+                                    <td class="px-5 py-4 whitespace-nowrap text-sm text-slate-300">
+                                        {{ registro.mes }} {{ registro.anio }}
+                                    </td>
+                                    <td class="px-5 py-4 whitespace-nowrap text-right">
+                                        <form method="POST"
+                                            action="{{ url_for('eliminar_peso', peso_id=registro.id) }}">
+                                            <button type="submit"
+                                                onclick="return confirm('¿Seguro que deseas eliminar este registro?');"
+                                                class="text-slate-500 hover:text-rose-500 p-2 rounded-lg hover:bg-rose-500/10 transition-colors cursor-pointer"
+                                                title="Eliminar registro">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div class="flex flex-col items-center justify-center p-8 text-center">
+                            <i class="fa-solid fa-clipboard-list text-3xl text-slate-600 mb-3"></i>
+                            <p class="text-slate-400">Aún no hay registros de peso.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

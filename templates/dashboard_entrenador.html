@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Entrenador - Fitness App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-950 text-slate-200 min-h-screen flex flex-col items-center">
+
+    <!-- Top Navigation -->
+    <nav class="w-full bg-slate-900/80 backdrop-blur-xl border-b border-slate-800 fixed top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                        <i class="fa-solid fa-dumbbell text-white text-sm"></i>
+                    </div>
+                    <span class="font-bold text-xl text-white tracking-tight">FitnessApp</span>
+                </div>
+                <div>
+                    <a href="/logout"
+                        class="text-sm font-medium text-slate-400 hover:text-white transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar Sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-12 flex-1 relative">
+        <!-- Decorators -->
+        <div
+            class="absolute top-0 right-0 w-[50%] h-[50%] rounded-full bg-indigo-600/10 blur-[120px] -z-10 pointer-events-none">
+        </div>
+        <div
+            class="absolute bottom-0 left-0 w-[30%] h-[40%] rounded-full bg-purple-600/10 blur-[100px] -z-10 pointer-events-none">
+        </div>
+
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-white tracking-tight">Panel del Entrenador</h1>
+                <p class="text-slate-400 mt-1">Gestiona a tus clientes y haz seguimiento de su progreso</p>
+            </div>
+            <a href="/crear_usuario"
+                class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:from-emerald-400 hover:to-teal-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-900">
+                <i class="fa-solid fa-plus"></i>
+                Crear Nuevo Usuario
+            </a>
+        </div>
+
+        <!-- Mensajes Flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="mb-8 space-y-2">
+            {% for category, message in messages %}
+            <div
+                class="p-4 rounded-xl flex items-center gap-3 {{ 'bg-red-500/10 text-red-400 border border-red-500/20' if category == 'error' else 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' }}">
+                <i class="fa-solid {{ 'fa-circle-exclamation' if category == 'error' else 'fa-circle-check' }}"></i>
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Buscar Usuario Card -->
+            <div class="lg:col-span-1">
+                <div
+                    class="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden group hover:border-indigo-500/30 transition-colors">
+                    <div
+                        class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-[50px] group-hover:bg-indigo-500/10 transition-colors">
+                    </div>
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="p-2.5 bg-slate-800 rounded-lg text-indigo-400">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </div>
+                        <h2 class="text-lg font-semibold text-white">Buscar Usuario</h2>
+                    </div>
+
+                    <form method="POST" class="space-y-4">
+                        {{ form.hidden_tag() }}
+                        <div class="space-y-1">
+                            <label class="block text-sm font-medium text-slate-300">DNI del Cliente</label>
+                            {{ form.dni(class="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl
+                            focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                            transition-all duration-200 text-slate-200 placeholder-slate-500", placeholder="Ej:
+                            12345678") }}
+                        </div>
+                        {{ form.submit(class="w-full py-2.5 px-4 font-semibold text-white bg-slate-800 border
+                        border-slate-700 hover:bg-slate-700 hover:border-slate-600 rounded-xl transition-all
+                        duration-200 cursor-pointer text-center", value="Acceder") }}
+                    </form>
+                </div>
+            </div>
+
+            <!-- Lista Usuarios Card -->
+            <div class="lg:col-span-2">
+                <div
+                    class="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-xl overflow-hidden flex flex-col h-full">
+                    <div class="p-6 border-b border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-slate-800 rounded-lg text-purple-400">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <h2 class="text-lg font-semibold text-white">Usuarios Registrados</h2>
+                        </div>
+                        <span
+                            class="px-3 py-1 bg-slate-800 text-xs font-medium text-slate-300 rounded-full border border-slate-700">{{
+                            usuarios|length }} clientes</span>
+                    </div>
+
+                    <div class="overflow-x-auto flex-1 p-2">
+                        {% if usuarios %}
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="text-xs font-medium text-slate-400 uppercase tracking-wider border-b border-slate-800/50">
+                                    <th class="px-5 py-4">DNI</th>
+                                    <th class="px-5 py-4">Cliente</th>
+                                    <th class="px-5 py-4 text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800/50">
+                                {% for usuario in usuarios %}
+                                <tr class="hover:bg-slate-800/30 transition-colors group">
+                                    <td class="px-5 py-4 whitespace-nowrap text-sm text-slate-300 font-medium">
+                                        {{ usuario.dni }}
+                                    </td>
+                                    <td class="px-5 py-4 whitespace-nowrap pb-4">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-300">
+                                                {{ usuario.nombre[0].upper() }}{{ usuario.apellido[0].upper() }}
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-semibold text-white">{{ usuario.nombre }} {{
+                                                    usuario.apellido }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-5 py-4 whitespace-nowrap text-right text-sm">
+                                        <div
+                                            class="flex items-center justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                                            <a href="/dashboard_usuario/{{ usuario.dni }}"
+                                                class="p-2 text-indigo-400 hover:text-indigo-300 hover:bg-slate-800 rounded-lg transition-all"
+                                                title="Ver Progreso">
+                                                <i class="fa-solid fa-chart-line"></i>
+                                            </a>
+                                            <a href="/editar_usuario/{{ usuario.id }}"
+                                                class="p-2 text-amber-400 hover:text-amber-300 hover:bg-slate-800 rounded-lg transition-all"
+                                                title="Editar">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </a>
+                                            <a href="/eliminar_usuario/{{ usuario.id }}"
+                                                onclick="return confirm('¿Estás seguro de que deseas eliminar este usuario?');"
+                                                class="p-2 text-rose-500 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-all"
+                                                title="Eliminar">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div class="flex flex-col items-center justify-center h-full min-h-[250px] text-center px-4">
+                            <div
+                                class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-4 text-slate-600">
+                                <i class="fa-solid fa-user-xmark text-2xl"></i>
+                            </div>
+                            <p class="text-slate-400 mb-4">Aún no tienes usuarios registrados.</p>
+                            <a href="/crear_usuario"
+                                class="text-indigo-400 hover:text-indigo-300 text-sm font-medium hover:underline">Comienza
+                                añadiendo uno</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>
