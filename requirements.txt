@@ -1,0 +1,7 @@
+flask
+flask_wtf
+python-dotenv
+argon2-cffi
+pytest
+plotly
+pandas

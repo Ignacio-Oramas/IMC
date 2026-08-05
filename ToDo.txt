@@ -1,4 +1,31 @@
-validar registro y cualquier entrada
-modificar ver grafico para establecer un rango
-crear recuperar contraseña
-agregar validacion para cedulas duplicadas
+# Plan de Refactorización - Servicio Comunitario
+
+## 1. Entorno y Seguridad Base
+- [x] Crear entorno virtual (venv).
+- [x] Implementar hashing de contraseñas con Argon2.
+- [x] Configurar variables de entorno (.env).
+- [x] Script scripts/setup_db.py.
+
+## 2. Reestructuración de Arquitectura (Screaming Architecture)
+- [x] Carpeta `/src`.
+- [x] `/src/core` (lógica funcional pura).
+- [x] `/src/infrastructure` (Repository / PDO).
+- [x] `/src/web` (rutas y formularios).
+
+## 3. Lógica y Programación Funcional
+- [x] `src/core/imc.py`: Funciones puras de cálculo.
+- [x] `src/core/security.py`: Módulo de hashing Argon2.
+- [x] `src/core/viz.py`: Lógica de visualización Plotly.
+
+## 4. Validaciones y Robustez
+- [x] Validaciones ketat en WTForms (src/web/forms.py).
+- [x] Sentencias preparadas en Repository.
+
+## 5. Calidad de Código y Testing
+- [x] Unit tests para core (11 passing).
+- [ ] Tests de integración (pendientes de setup de templates en entorno de test).
+
+## Estado: EN PROGRESO
+- La app funcional está corriendo.
+- Unit tests passando.
+- Faltan integration tests por la configuración de templates en test.

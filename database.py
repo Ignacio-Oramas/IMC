@@ -1,11 +1,16 @@
 import sqlite3
+import os
 from datetime import datetime
 
-DATABASE = 'database.db'
+DATABASE = os.getenv('DATABASE_PATH', 'database.db')
+if not os.path.isabs(DATABASE):
+    base_dir = os.path.abspath(os.path.dirname(__file__))
+    DATABASE = os.path.join(base_dir, DATABASE)
 
 def get_db():
     conn = sqlite3.connect(DATABASE, timeout=20.0)
     conn.row_factory = sqlite3.Row
+    print("conneccion satisfactoria")
     return conn
 
 def init_db():
